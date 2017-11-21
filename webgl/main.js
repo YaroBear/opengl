@@ -1,25 +1,18 @@
 loadCollada();
 
-let squareRotation = 0.0;
+let objectRotation = 0.0;
 
 var verts;
 var totalCount;
 var uvHead;
 var uvCount;
 
-const boyAttributes = [
-	"Boy01_Hair_Geo-lib",
-	"Boy01_Hands_Geo-lib",
-	"Boy01_Head_Geo-lib",
-	"Boy01_LowerBody_Geo-lib",
-	"Boy01_Scarf_Geo-lib",
-	"Boy01_Shoes_Geo-lib",
-	"Boy01_UpperBody_Geo-lib"
-];
-
 var objectVerts = [];
+var objectVertsCount = [];
 var objectUVs = [];
 var objectTextures = [];
+
+var objectInfo = {};
 
 function loadCollada(){
 	let loader = new THREE.ColladaLoader();
@@ -33,13 +26,18 @@ function loadCollada(){
 		//console.log(Object.values(obj.library.geometries)[0]);
 
 		Object.values(obj.library.geometries).forEach((geometry) =>{
-			objectVerts.push(geometry.build.polylist.data.attributes.position.array)
-			objectVerts.push(geometry.build.polylist.data.attributes.uv.array)
+			objectInfo[geometry.name] = {};
+			objectInfo[geometry.name].position = geometry.build.polylist.data.attributes.position.array;
+			objectInfo[geometry.name].uv = geometry.build.polylist.data.attributes.uv.array;
+			objectInfo[geometry.name].verticesCount = geometry.build.polylist.data.attributes.position.count;
 		});
 
-		Object.values(obj.library.images).forEach((image) =>{
-			objectTextures.push(image.build);
+
+		Object.values(obj.library.images).forEach((image, index) =>{
+			objectInfo[Object.keys(objectInfo)[index]].texture = image.build;
 		});
+
+		console.log(objectInfo);
 
 		//console.log(objectVerts);
 		//console.log(objectTextures);
@@ -101,9 +99,11 @@ function main(){
 		},
 	};
 
-	const buffers = initBuffers(gl);
+	let head = "Boy01_Head_GeoMesh";
 
-	const texture = loadTexture(gl, 'http://localhost:8000/textures/Boy_Head_diffuse.png');
+	const buffers = initBuffers(gl, objectInfo[head].position, objectInfo[head].uv);
+
+	const texture = loadTexture(gl, 'http://localhost:8000/' + objectInfo[head].texture);
 
 	let then = 0;
 
@@ -121,18 +121,18 @@ function main(){
 	//drawScene(gl, programInfo, buffers, 0);
 }
 
-function initBuffers(gl) {
+function initBuffers(gl, positionVertices, uvCoords) {
 	const positionBuffer = gl.createBuffer();
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
 	gl.bufferData(gl.ARRAY_BUFFER,
-					new Float32Array(verts),
+					new Float32Array(positionVertices),
 					gl.STATIC_DRAW);
 
 	 const textureCoordBuffer = gl.createBuffer();
 	 gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
-	 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvHead), gl.STATIC_DRAW);
+	 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvCoords), gl.STATIC_DRAW);
 
 
 	return {
@@ -169,7 +169,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime){
 
 	mat4.rotate(modelViewMatrix,  // destination matrix
 					modelViewMatrix,  // matrix to rotate
-					squareRotation,   // amount to rotate in radians
+					objectRotation,   // amount to rotate in radians
 					[0, 1, 0]);       // axis to rotate around
 
 	{
@@ -231,7 +231,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime){
 			gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
 		}
 
-	squareRotation += deltaTime;
+	objectRotation += deltaTime;
 }
 
 
