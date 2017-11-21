@@ -1,0 +1,16 @@
+{
+  "name": "graphics_project",
+  "version": "1.0.0",
+  "description": "webgl animation final project",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cosc4370",
+    "final",
+    "project"
+  ],
+  "author": "Yaroslav Berejnoi",
+  "license": "MIT"
+}
