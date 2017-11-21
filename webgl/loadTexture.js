@@ -24,8 +24,10 @@ function loadTexture(gl, url) {
                 pixel);
 
   const image = new Image();
+  image.crossOrigin = "Anonymous";
   image.onload = function() {
     gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //flip
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                   srcFormat, srcType, image);
 

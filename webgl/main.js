@@ -50,7 +50,7 @@ function main(){
 		uniform mat4 uModelViewMarix;
 		uniform mat4 uProjectionMatrix;
 
-		varying highp vTextureCoord;
+		varying highp vec2 vTextureCoord;
 
 		void main(){
 			gl_Position = uProjectionMatrix * uModelViewMarix * aVertexPosition;
