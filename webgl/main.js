@@ -17,6 +17,10 @@ const boyAttributes = [
 	"Boy01_UpperBody_Geo-lib"
 ];
 
+var objectVerts = [];
+var objectUVs = [];
+var objectTextures = [];
+
 function loadCollada(){
 	let loader = new THREE.ColladaLoader();
 
@@ -26,7 +30,21 @@ function loadCollada(){
 		uvHead = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.uv.array;
 		uvCount = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.uv.count;
 		totalCount = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.position.count;
-		console.log(verts);
+		//console.log(Object.values(obj.library.geometries)[0]);
+
+		Object.values(obj.library.geometries).forEach((geometry) =>{
+			objectVerts.push(geometry.build.polylist.data.attributes.position.array)
+			objectVerts.push(geometry.build.polylist.data.attributes.uv.array)
+		});
+
+		Object.values(obj.library.images).forEach((image) =>{
+			objectTextures.push(image.build);
+		});
+
+		//console.log(objectVerts);
+		//console.log(objectTextures);
+
+		//console.log(Object.values(obj.library.images));
 		main();
 	});
 }
