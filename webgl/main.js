@@ -3,37 +3,27 @@ loadCollada();
 let objectRotation = 0.0;
 
 
-var objectInfo = {};
+var compositeObject = {};
 
 function loadCollada(){
 	let loader = new THREE.ColladaLoader();
 
 	loader.load('http://localhost:8000/Walking.dae', function(obj){
-		console.log(obj);
-		verts = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.position.array; //.count
-		uvHead = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.uv.array;
-		uvCount = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.uv.count;
-		totalCount = obj.library.geometries["Boy01_Head_Geo-lib"].build.polylist.data.attributes.position.count;
-		//console.log(Object.values(obj.library.geometries)[0]);
 
 		Object.values(obj.library.geometries).forEach((geometry) =>{
-			objectInfo[geometry.name] = {};
-			objectInfo[geometry.name].position = geometry.build.polylist.data.attributes.position.array;
-			objectInfo[geometry.name].uv = geometry.build.polylist.data.attributes.uv.array;
-			objectInfo[geometry.name].verticesCount = geometry.build.polylist.data.attributes.position.count;
+			compositeObject[geometry.name] = {};
+			compositeObject[geometry.name].position = geometry.build.polylist.data.attributes.position.array;
+			compositeObject[geometry.name].uv = geometry.build.polylist.data.attributes.uv.array;
+			compositeObject[geometry.name].verticesCount = geometry.build.polylist.data.attributes.position.count;
 		});
 
 
 		Object.values(obj.library.images).forEach((image, index) =>{
-			objectInfo[Object.keys(objectInfo)[index]].texture = image.build;
+			compositeObject[Object.keys(compositeObject)[index]].texture = image.build;
 		});
 
-		console.log(objectInfo);
+		console.log(compositeObject);
 
-		//console.log(objectVerts);
-		//console.log(objectTextures);
-
-		//console.log(Object.values(obj.library.images));
 		main();
 	});
 }
@@ -90,30 +80,15 @@ function main(){
 		},
 	};
 
-	let head = "Boy01_Head_GeoMesh";
-	let hair = "Boy01_Hair_GeoMesh";
+	let objects = [];
 
-	let object1 = {};
-	let object2 = {};
-
-	const buffers1 = initBuffers(gl, objectInfo[head].position, objectInfo[head].uv);
-	const buffers2 = initBuffers(gl, objectInfo[hair].position, objectInfo[hair].uv);
-
-	const texture1 = loadTexture(gl, 'http://localhost:8000/' + objectInfo[head].texture);
-	const texture2 = loadTexture(gl, 'http://localhost:8000/' + objectInfo[hair].texture);
-
-	object1.buffers = buffers1;
-	object1.verticesCount = objectInfo[head].verticesCount;
-	object2.buffers = buffers2;
-	object2.verticesCount = objectInfo[hair].verticesCount;
-	object1.texture = texture1;
-	object2.texture = texture2;
-
-	let objects = [object1, object2];
-
-
-
-	console.log(objects);
+	Object.keys(compositeObject).forEach((objectName) =>{
+		let object = {};
+		object.buffers = initBuffers(gl, compositeObject[objectName].position, compositeObject[objectName].uv);
+		object.texture = loadTexture(gl, 'http://localhost:8000/' + compositeObject[objectName].texture);
+		object.verticesCount = compositeObject[objectName].verticesCount;
+		objects.push(object);
+	});
 
 	let then = 0;
 
@@ -162,7 +137,7 @@ function drawScene(gl, programInfo, objects, deltaTime){
 	const fieldOfView = 45 * Math.PI / 180;   // in radians
 	const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	const zNear = 0.1;
-	const zFar = 200.0;
+	const zFar = 10000.0;
 	const projectionMatrix = mat4.create();
 
 	mat4.perspective(projectionMatrix,
@@ -175,12 +150,12 @@ function drawScene(gl, programInfo, objects, deltaTime){
 
 	mat4.translate(modelViewMatrix,
 					modelViewMatrix,
-					[-0.0, -160.0, -120.0]);
+					[-0.0, -160.0, -200.0]);
 
 	mat4.rotate(modelViewMatrix,  // destination matrix
 					modelViewMatrix,  // matrix to rotate
 					objectRotation,   // amount to rotate in radians
-					[0, 0, 0]);       // axis to rotate around
+					[0, 1, 0]);       // axis to rotate around
 
 	objects.forEach((object) =>{
 
