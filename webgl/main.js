@@ -2,15 +2,6 @@ loadCollada();
 
 let objectRotation = 0.0;
 
-var verts;
-var totalCount;
-var uvHead;
-var uvCount;
-
-var objectVerts = [];
-var objectVertsCount = [];
-var objectUVs = [];
-var objectTextures = [];
 
 var objectInfo = {};
 
@@ -100,10 +91,29 @@ function main(){
 	};
 
 	let head = "Boy01_Head_GeoMesh";
+	let hair = "Boy01_Hair_GeoMesh";
 
-	const buffers = initBuffers(gl, objectInfo[head].position, objectInfo[head].uv);
+	let object1 = {};
+	let object2 = {};
 
-	const texture = loadTexture(gl, 'http://localhost:8000/' + objectInfo[head].texture);
+	const buffers1 = initBuffers(gl, objectInfo[head].position, objectInfo[head].uv);
+	const buffers2 = initBuffers(gl, objectInfo[hair].position, objectInfo[hair].uv);
+
+	const texture1 = loadTexture(gl, 'http://localhost:8000/' + objectInfo[head].texture);
+	const texture2 = loadTexture(gl, 'http://localhost:8000/' + objectInfo[hair].texture);
+
+	object1.buffers = buffers1;
+	object1.verticesCount = objectInfo[head].verticesCount;
+	object2.buffers = buffers2;
+	object2.verticesCount = objectInfo[hair].verticesCount;
+	object1.texture = texture1;
+	object2.texture = texture2;
+
+	let objects = [object1, object2];
+
+
+
+	console.log(objects);
 
 	let then = 0;
 
@@ -112,7 +122,7 @@ function main(){
 		const deltaTime = now - then;
 		then = now;
 
-		drawScene(gl, programInfo, buffers, texture, deltaTime);
+		drawScene(gl, programInfo, objects, deltaTime);
 
 		requestAnimationFrame(render);
 	}
@@ -141,7 +151,7 @@ function initBuffers(gl, positionVertices, uvCoords) {
 	};
 }
 
-function drawScene(gl, programInfo, buffers, texture, deltaTime){
+function drawScene(gl, programInfo, objects, deltaTime){
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.clearDepth(1.0);
 	gl.enable(gl.DEPTH_TEST);
@@ -170,66 +180,68 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime){
 	mat4.rotate(modelViewMatrix,  // destination matrix
 					modelViewMatrix,  // matrix to rotate
 					objectRotation,   // amount to rotate in radians
-					[0, 1, 0]);       // axis to rotate around
+					[0, 0, 0]);       // axis to rotate around
 
-	{
-		const numComponents = 3;
-		const type = gl.FLOAT;
-		const normalize = false;
-		const stride = 0;
-		const offset = 0;
-		gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-		gl.vertexAttribPointer(
-			programInfo.attribLocations.vertexPosition,
-			numComponents,
-			type,
-			normalize,
-			stride,
-			offset);
+	objects.forEach((object) =>{
 
-		gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-	}
-	
-	{
-	   const numComponents = 2;
-	   const type = gl.FLOAT;
-	   const normalize = false;
-	   const stride = 0;
-	   const offset = 0;
-	   gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
-	   gl.vertexAttribPointer(
-	       programInfo.attribLocations.textureCoord,
-	       numComponents,
-	       type,
-	       normalize,
-	       stride,
-	       offset);
-	   gl.enableVertexAttribArray(
-	       programInfo.attribLocations.textureCoord);
-	}
-	
+		{
+			const numComponents = 3;
+			const type = gl.FLOAT;
+			const normalize = false;
+			const stride = 0;
+			const offset = 0;
+			gl.bindBuffer(gl.ARRAY_BUFFER, object.buffers.position);
+			gl.vertexAttribPointer(
+				programInfo.attribLocations.vertexPosition,
+				numComponents,
+				type,
+				normalize,
+				stride,
+				offset);
 
-	gl.useProgram(programInfo.program);
+			gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+		}
 
-	gl.uniformMatrix4fv(
-		programInfo.uniformLocations.projectionMatrix,
-		false,
-		projectionMatrix);
+		{
+		   const numComponents = 2;
+		   const type = gl.FLOAT;
+		   const normalize = false;
+		   const stride = 0;
+		   const offset = 0;
+		   gl.bindBuffer(gl.ARRAY_BUFFER, object.buffers.textureCoord);
+		   gl.vertexAttribPointer(
+		       programInfo.attribLocations.textureCoord,
+		       numComponents,
+		       type,
+		       normalize,
+		       stride,
+		       offset);
+		   gl.enableVertexAttribArray(
+		       programInfo.attribLocations.textureCoord);
+		}
 
-	gl.uniformMatrix4fv(
-		programInfo.uniformLocations.modelViewMatrix,
-		false,
-		modelViewMatrix);
+		gl.useProgram(programInfo.program);
 
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, texture);
-	gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+		gl.uniformMatrix4fv(
+			programInfo.uniformLocations.projectionMatrix,
+			false,
+			projectionMatrix);
+
+		gl.uniformMatrix4fv(
+			programInfo.uniformLocations.modelViewMatrix,
+			false,
+			modelViewMatrix);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, object.texture);
+		gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
 		{
 			const offset = 0;
-			const vertexCount = totalCount;
+			const vertexCount = object.verticesCount;
 			gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
 		}
+	});
 
 	objectRotation += deltaTime;
 }
